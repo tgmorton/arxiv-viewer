@@ -124,7 +124,7 @@ main {
 
 /* Papers grid view */
 .papers-grid {
-  display: grid;
+  display: none;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: var(--space-md);
 }
@@ -193,7 +193,7 @@ main {
   border-collapse: collapse;
   font-size: var(--font-size-base);
   line-height: 1.2;
-  display: none;
+  display: table;
 }
 
 .papers-table th {
@@ -224,14 +224,57 @@ main {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-small);
   position: static;
+  width: 80px;
+  color: var(--color-text-secondary);
+}
+
+.papers-table .checkbox-cell {
+  width: 20px;
+  text-align: center;
+}
+
+.papers-table .date-cell {
+  width: 80px;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+}
+
+.papers-table .link-cell {
+  width: 40px;
+  text-align: center;
 }
 
 .papers-table .paper-title {
-  margin-bottom: 0;
+  margin-bottom: var(--space-xs);
+  font-weight: 700;
+}
+
+.papers-table .paper-author {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-xs);
+  font-style: italic;
 }
 
 .papers-table .paper-summary {
-  display: none;
+  display: block;
+  font-size: var(--font-size-base);
+  line-height: 1.4;
+}
+
+.more-less-btn {
+  font-size: var(--font-size-micro);
+  color: var(--color-accent-secondary);
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-decoration: none;
+  padding: 0;
+  margin-left: var(--space-xs);
+}
+
+.more-less-btn:hover {
+  text-decoration: underline;
 }
 
 /* Modal */
@@ -310,6 +353,26 @@ main {
 
 .paper-link:hover {
   background-color: #303030;
+}
+
+.paper-link-small {
+  display: inline-block;
+  background-color: var(--color-background-secondary);
+  color: var(--color-text-primary);
+  padding: var(--space-xs) var(--space-sm);
+  text-decoration: none;
+  font-size: var(--font-size-micro);
+  transition: background-color 150ms ease-in-out;
+}
+
+.paper-link-small:hover {
+  background-color: #E0E0E0;
+}
+
+.paper-select {
+  width: 12px;
+  height: 12px;
+  cursor: pointer;
 }
 
 /* Loading state */

@@ -12,8 +12,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeModal = document.querySelector('.close-modal');
   
   // State
-  let currentView = 'grid'; // 'grid' or 'table'
+  let currentView = 'table'; // 'grid' or 'table'
   let paperData = []; // Store papers data
+  let expandedPapers = {}; // Track expanded abstracts
+  let selectedPapers = {}; // Track selected papers
   
   // Load papers on page load
   loadPapers();
@@ -57,11 +59,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
+  function toggleAbstract(event, paperId) {
+    event.stopPropagation(); // Prevent opening the modal
+    expandedPapers[paperId] = !expandedPapers[paperId];
+    
+    // Re-render based on current view
+    if (currentView === 'grid') {
+      renderPapersGrid(paperData);
+    } else {
+      renderPapersTable(paperData);
+    }
+  }
+  
+  function togglePaperSelection(event, paperId) {
+    event.stopPropagation(); // Prevent opening the modal
+    selectedPapers[paperId] = !selectedPapers[paperId];
+    
+    // Re-render based on current view
+    if (currentView === 'grid') {
+      renderPapersGrid(paperData);
+    } else {
+      renderPapersTable(paperData);
+    }
+  }
+  
+  function truncateText(text, maxLength = 150) {
+    if (!text) return 'No summary available';
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  }
+  
   async function loadPapers() {
     try {
       // Show loading
+      papersTableBody.innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="loading">Loading papers...</div>
+          </td>
+        </tr>
+      `;
       papersContainer.innerHTML = '<div class="loading">Loading papers...</div>';
-      papersTableBody.innerHTML = '';
       
       // Get selected feed URL
       const feedUrl = categorySelect.value;
@@ -73,6 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const papers = await response.json();
       
       if (papers.length === 0) {
+        papersTableBody.innerHTML = `
+          <tr>
+            <td colspan="5">
+              <div class="loading">No papers found</div>
+            </td>
+          </tr>
+        `;
         papersContainer.innerHTML = '<div class="loading">No papers found</div>';
         return;
       }
@@ -88,6 +133,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (error) {
       console.error('Error loading papers:', error);
+      papersTableBody.innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="loading">Error: ${error.message}</div>
+          </td>
+        </tr>
+      `;
       papersContainer.innerHTML = `<div class="loading">Error: ${error.message}</div>`;
     }
   }
@@ -100,9 +152,6 @@ document.addEventListener('DOMContentLoaded', () => {
     papers.forEach(paper => {
       const card = createPaperCard(paper);
       papersContainer.appendChild(card);
-      
-      // Add click event to open modal
-      card.addEventListener('click', () => openPaperModal(paper));
     });
   }
   
@@ -114,9 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
     papers.forEach(paper => {
       const row = createPaperRow(paper);
       papersTableBody.appendChild(row);
-      
-      // Add click event to open modal
-      row.addEventListener('click', () => openPaperModal(paper));
     });
   }
   
@@ -135,20 +181,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // Clean description (remove HTML tags)
     const cleanDescription = paper.description ? paper.description.replace(/<\/?[^>]+(>|$)/g, "") : 'No summary available';
     
+    // Determine if expanded
+    const isExpanded = expandedPapers[paper.id];
+    const displayDescription = isExpanded ? cleanDescription : truncateText(cleanDescription);
+    
+    // Create checkbox for selection
+    const isSelected = selectedPapers[paper.id];
+    
     // Create card content
     card.innerHTML = `
       <div class="paper-id">${paper.id}</div>
+      <input type="checkbox" class="paper-select" ${isSelected ? 'checked' : ''}>
       <h3 class="paper-title">${paper.title}</h3>
       <p class="paper-author">${paper.creator || 'Unknown authors'}</p>
       <p class="paper-date">${formattedDate}</p>
-      <p class="paper-summary">${cleanDescription}</p>
+      <p class="paper-summary">
+        ${displayDescription}
+        <button class="more-less-btn">${isExpanded ? '[less]' : '[more]'}</button>
+      </p>
+      <a href="${paper.link}" class="paper-link" target="_blank">View on ArXiv</a>
     `;
+    
+    // Add event listeners
+    const moreBtn = card.querySelector('.more-less-btn');
+    moreBtn.addEventListener('click', (e) => toggleAbstract(e, paper.id));
+    
+    const checkbox = card.querySelector('.paper-select');
+    checkbox.addEventListener('change', (e) => togglePaperSelection(e, paper.id));
+    
+    // Add click event to open modal (except for checkboxes and more/less buttons)
+    card.addEventListener('click', () => openPaperModal(paper));
     
     return card;
   }
   
   function createPaperRow(paper) {
     const row = document.createElement('tr');
+    row.classList.add(paper.id % 2 === 0 ? 'even' : 'odd');
     
     // Format date
     const date = new Date(paper.date);
@@ -158,13 +227,52 @@ document.addEventListener('DOMContentLoaded', () => {
       day: 'numeric'
     });
     
+    // Clean description (remove HTML tags)
+    const cleanDescription = paper.description ? paper.description.replace(/<\/?[^>]+(>|$)/g, "") : 'No summary available';
+    
+    // Determine if expanded
+    const isExpanded = expandedPapers[paper.id];
+    const displayDescription = isExpanded ? cleanDescription : truncateText(cleanDescription);
+    
+    // Determine if selected
+    const isSelected = selectedPapers[paper.id];
+    
     // Create row content
     row.innerHTML = `
+      <td class="checkbox-cell">
+        <input type="checkbox" class="paper-select" ${isSelected ? 'checked' : ''}>
+      </td>
       <td class="paper-id">${paper.id}</td>
-      <td class="paper-title">${paper.title}</td>
-      <td class="paper-author">${paper.creator || 'Unknown authors'}</td>
-      <td class="paper-date">${formattedDate}</td>
+      <td>
+        <div class="paper-title">${paper.title}</div>
+        <div class="paper-author">${paper.creator || 'Unknown authors'}</div>
+        <div class="paper-summary">
+          ${displayDescription}
+          <button class="more-less-btn">${isExpanded ? '[less]' : '[more]'}</button>
+        </div>
+      </td>
+      <td class="date-cell">${formattedDate}</td>
+      <td class="link-cell">
+        <a href="${paper.link}" class="paper-link-small" target="_blank">view</a>
+      </td>
     `;
+    
+    // Add event listeners
+    const moreBtn = row.querySelector('.more-less-btn');
+    moreBtn.addEventListener('click', (e) => toggleAbstract(e, paper.id));
+    
+    const checkbox = row.querySelector('.paper-select');
+    checkbox.addEventListener('change', (e) => togglePaperSelection(e, paper.id));
+    
+    // Add click event to open modal (delegated to the row)
+    row.addEventListener('click', (e) => {
+      // Only open modal if not clicking on checkbox, link or more/less button
+      if (!e.target.closest('.paper-select') && 
+          !e.target.closest('.more-less-btn') &&
+          !e.target.closest('.paper-link-small')) {
+        openPaperModal(paper);
+      }
+    });
     
     return row;
   }

@@ -24,8 +24,8 @@
   
   <main>
     <div class="view-toggle">
-      <button id="grid-view-btn" class="active">Grid View</button>
-      <button id="table-view-btn">Table View</button>
+      <button id="grid-view-btn">Grid View</button>
+      <button id="table-view-btn" class="active">Table View</button>
     </div>
     
     <div id="papers-container" class="papers-grid">
@@ -36,14 +36,20 @@
     <table id="papers-table" class="papers-table">
       <thead>
         <tr>
+          <th class="checkbox-cell"></th>
           <th>ID</th>
-          <th>Title</th>
-          <th>Authors</th>
+          <th>Title / Abstract</th>
           <th>Date</th>
+          <th class="link-cell">Link</th>
         </tr>
       </thead>
       <tbody>
         <!-- Table rows will be loaded here -->
+        <tr>
+          <td colspan="5">
+            <div class="loading">Loading papers...</div>
+          </td>
+        </tr>
       </tbody>
     </table>
   </main>
