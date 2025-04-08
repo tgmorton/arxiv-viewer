@@ -223,12 +223,33 @@ main {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--font-size-base);
   line-height: 1.2;
   display: table;
   table-layout: fixed;
   overflow-wrap: break-word;
+}
+
+/* Column resizing styles */
+.papers-table th {
+  position: relative;
+}
+
+.papers-table th:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 5px;
+  height: 100%;
+  background-color: transparent;
+  cursor: col-resize;
+}
+
+.papers-table th:not(:last-child):hover::after {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .papers-table th {
@@ -238,6 +259,7 @@ main {
   font-weight: 700;
   text-transform: uppercase;
   border-bottom: 1px solid var(--color-border-dark);
+  user-select: none;
 }
 
 .papers-table td {
@@ -262,7 +284,11 @@ main {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-small);
   position: static;
-  width: 70px;
+  width: 60px;
+  max-width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--color-text-secondary);
 }
 

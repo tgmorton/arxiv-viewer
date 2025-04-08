@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const paginationInfo = document.getElementById('pagination-info');
   const papersContainer = document.getElementById('papers-container');
   const papersTable = document.getElementById('papers-table');
+  const papersTableHead = papersTable.querySelector('thead');
   const papersTableBody = papersTable.querySelector('tbody');
   const gridViewBtn = document.getElementById('grid-view-btn');
   const tableViewBtn = document.getElementById('table-view-btn');
@@ -33,6 +34,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Load papers on page load
   loadPapers();
   
+  // Column resizing variables
+  let isResizing = false;
+  let currentResizer = null;
+  let startX, startWidth, nextStartWidth;
+  
   // Event listeners
   categorySelect.addEventListener('change', () => {
     currentPage = 1;
@@ -53,6 +59,76 @@ document.addEventListener('DOMContentLoaded', () => {
   showSelectionBtn.addEventListener('click', showSelectionModal);
   copySelectionBtn.addEventListener('click', copySelectionToClipboard);
   clearSelectionBtn.addEventListener('click', clearSelection);
+  
+  // Initialize column resizing after table is loaded
+  function initColumnResizing() {
+    const headers = papersTableHead.querySelectorAll('th');
+    
+    headers.forEach((header, index) => {
+      if (index < headers.length - 1) { // Skip last header
+        const resizer = header;
+        
+        resizer.addEventListener('mousedown', function(e) {
+          // Only activate if clicking on the resizer area (right 5px)
+          const headerRect = header.getBoundingClientRect();
+          const resizerAreaX = headerRect.right - 5;
+          
+          if (e.clientX >= resizerAreaX) {
+            isResizing = true;
+            currentResizer = header;
+            startX = e.pageX;
+            startWidth = parseInt(window.getComputedStyle(header).width, 10);
+            
+            // Get the next header for adjustment
+            const nextHeader = headers[index + 1];
+            if (nextHeader) {
+              nextStartWidth = parseInt(window.getComputedStyle(nextHeader).width, 10);
+            }
+            
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+            e.preventDefault();
+          }
+        });
+      }
+    });
+    
+    function handleMouseMove(e) {
+      if (!isResizing) return;
+      
+      const index = Array.from(headers).indexOf(currentResizer);
+      const nextHeader = headers[index + 1];
+      
+      if (!nextHeader) return;
+      
+      const diffX = e.pageX - startX;
+      
+      // Limit minimum width to 30px
+      const newWidth = Math.max(30, startWidth + diffX);
+      const newNextWidth = Math.max(30, nextStartWidth - diffX);
+      
+      currentResizer.style.width = `${newWidth}px`;
+      nextHeader.style.width = `${newNextWidth}px`;
+      
+      // Update all cells in this column
+      const tableRows = papersTable.querySelectorAll('tr');
+      tableRows.forEach(row => {
+        const cells = row.querySelectorAll('td, th');
+        if (cells.length > index) {
+          cells[index].style.width = `${newWidth}px`;
+          if (cells.length > index + 1) {
+            cells[index + 1].style.width = `${newNextWidth}px`;
+          }
+        }
+      });
+    }
+    
+    function handleMouseUp() {
+      isResizing = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    }
+  }
   
   window.addEventListener('click', (e) => {
     if (e.target === modal) modal.style.display = 'none';
@@ -305,6 +381,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPapersGrid(papers);
       } else {
         renderPapersTable(papers);
+        // Initialize column resizing after table is rendered
+        setTimeout(initColumnResizing, 100);
       }
     } catch (error) {
       console.error('Error loading papers:', error);
