@@ -43,6 +43,28 @@
       </div>
     </div>
     
+    <div class="date-filters">
+      <div class="date-filter-toggle">
+        <button id="toggle-date-filter">Date Filter</button>
+      </div>
+      <div class="date-filter-controls" id="date-filter-controls" style="display: none;">
+        <div class="date-inputs">
+          <div class="date-input-group">
+            <label for="date-from">From:</label>
+            <input type="date" id="date-from" aria-label="Filter from date">
+          </div>
+          <div class="date-input-group">
+            <label for="date-to">To:</label>
+            <input type="date" id="date-to" aria-label="Filter to date">
+          </div>
+        </div>
+        <div class="date-filter-buttons">
+          <button id="apply-date-filter">Apply Filter</button>
+          <button id="clear-date-filter">Clear Filter</button>
+        </div>
+      </div>
+    </div>
+    
     <div class="pagination-controls">
       <button id="prev-page-btn" disabled>← Previous</button>
       <span id="pagination-info">Page 1 of 1</span>

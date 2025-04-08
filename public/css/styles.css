@@ -113,6 +113,58 @@ h1 {
   background-color: var(--color-accent-secondary);
 }
 
+.date-filters {
+  margin-top: var(--space-sm);
+  padding-bottom: var(--space-sm);
+}
+
+.date-filter-toggle {
+  display: flex;
+  justify-content: center;
+}
+
+.date-filter-controls {
+  margin-top: var(--space-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.date-inputs {
+  display: flex;
+  gap: var(--space-md);
+  align-items: center;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.date-input-group label {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.date-input-group input[type="date"] {
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border);
+  font-size: var(--font-size-small);
+  width: 130px;
+  font-family: var(--font-family-primary);
+}
+
+.date-filter-buttons {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.date-filter-active {
+  background-color: var(--color-accent-secondary);
+}
+
 .pagination-controls {
   display: flex;
   align-items: center;

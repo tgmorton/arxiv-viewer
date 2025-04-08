@@ -78,6 +78,8 @@ app.get('/api/papers', async (req, res) => {
     const sortBy = req.query.sortBy || 'submittedDate';
     const sortOrder = req.query.sortOrder || 'descending';
     const searchTerm = req.query.search || '';
+    const dateFrom = req.query.dateFrom || ''; // Format: YYYYMMDD, e.g., 20200101
+    const dateTo = req.query.dateTo || '';     // Format: YYYYMMDD, e.g., 20201231
     
     // Calculate start index for pagination
     const start = (page - 1) * pageSize;
@@ -85,15 +87,28 @@ app.get('/api/papers', async (req, res) => {
     // Construct the ArXiv API query
     const apiUrl = 'http://export.arxiv.org/api/query';
     
-    // Build search query based on presence of search term
-    let searchQuery;
+    // Build search query based on parameters
+    let searchQueryParts = [];
+    
+    // Add category constraint
+    searchQueryParts.push(`cat:${category}`);
+    
+    // Add search term if present
     if (searchTerm) {
-      // Search in title and abstract
-      // Properly format the ArXiv API query syntax
-      searchQuery = `search_query=cat:${category}+AND+(ti:${encodeURIComponent(searchTerm)}+OR+abs:${encodeURIComponent(searchTerm)})`;
-    } else {
-      searchQuery = `search_query=cat:${category}`;
+      searchQueryParts.push(`(ti:${encodeURIComponent(searchTerm)}+OR+abs:${encodeURIComponent(searchTerm)})`);
     }
+    
+    // Add date range constraints if provided
+    if (dateFrom && dateTo) {
+      searchQueryParts.push(`submittedDate:[${dateFrom}0000+TO+${dateTo}2359]`);
+    } else if (dateFrom) {
+      searchQueryParts.push(`submittedDate:[${dateFrom}0000+TO+99991231]`);
+    } else if (dateTo) {
+      searchQueryParts.push(`submittedDate:[00000101+TO+${dateTo}2359]`);
+    }
+    
+    // Combine all constraints with AND
+    const searchQuery = `search_query=${searchQueryParts.join('+AND+')}`;
     
     const query = `${searchQuery}&start=${start}&max_results=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
     
@@ -113,8 +128,25 @@ app.get('/api/papers', async (req, res) => {
       
       // Extract total results and calculate pagination info
       const opensearchTotalResults = parseInt(result.feed['opensearch:totalresults']?._ || 0);
-      const totalResults = Math.min(opensearchTotalResults, 10000); // ArXiv API limits to 10k results
+      const opensearchItemsPerPage = parseInt(result.feed['opensearch:itemsperpage']?._ || pageSize);
+      
+      // ArXiv API has practical limits:
+      // - Total results are often capped at around 1000 regardless of what's reported
+      // - We'll use a more realistic cap based on experience with the API
+      const apiPracticalLimit = 1000;
+      
+      // Determine if we received fewer results than requested, which indicates we're at the end
+      const isIncomplete = (Array.isArray(result.feed.entry) ? result.feed.entry.length : 0) < opensearchItemsPerPage;
+      
+      // Calculate the likely actual total (more accurate than the reported total)
+      const estimatedTotal = Math.min(opensearchTotalResults, apiPracticalLimit);
+      
+      // Use the more accurate count for pagination
+      const totalResults = estimatedTotal;
       const totalPages = Math.ceil(totalResults / pageSize);
+      
+      // Determine if we likely have more pages based on both the estimated total and the completeness of results
+      const hasMorePages = !isIncomplete && (page * pageSize < totalResults);
       
       // Extract and format paper data
       const entries = result.feed.entry;
@@ -152,8 +184,13 @@ app.get('/api/papers', async (req, res) => {
         isComplete: totalResults <= pageSize,
         page,
         totalPages,
-        hasNextPage: page < totalPages,
-        hasPrevPage: page > 1
+        hasNextPage: hasMorePages,
+        hasPrevPage: page > 1,
+        actualCount: Array.isArray(entries) ? entries.length : 0,
+        dateFrom,
+        dateTo,
+        apiLimited: opensearchTotalResults > apiPracticalLimit,
+        rawTotalResults: opensearchTotalResults
       };
       
       res.json({

@@ -12,6 +12,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const prevPageBtnBottom = document.getElementById('prev-page-btn-bottom');
   const nextPageBtnBottom = document.getElementById('next-page-btn-bottom');
   const paginationInfoBottom = document.getElementById('pagination-info-bottom');
+  // Date filter elements
+  const toggleDateFilterBtn = document.getElementById('toggle-date-filter');
+  const dateFilterControls = document.getElementById('date-filter-controls');
+  const dateFromInput = document.getElementById('date-from');
+  const dateToInput = document.getElementById('date-to');
+  const applyDateFilterBtn = document.getElementById('apply-date-filter');
+  const clearDateFilterBtn = document.getElementById('clear-date-filter');
   const papersContainer = document.getElementById('papers-container');
   const papersTable = document.getElementById('papers-table');
   const papersTableHead = papersTable.querySelector('thead');
@@ -37,6 +44,11 @@ document.addEventListener('DOMContentLoaded', () => {
   let channelInfo = {}; // Store info about the current feed
   let currentPage = 1; // Current page number
   let currentSearchTerm = ''; // Current search term
+  let dateFromFilter = ''; // Current date from filter (YYYYMMDD format)
+  let dateToFilter = ''; // Current date to filter (YYYYMMDD format)
+  
+  // Initialize date filter controls
+  dateFilterControls.style.display = 'none';
   
   // Load papers on page load
   loadPapers();
@@ -94,6 +106,45 @@ document.addEventListener('DOMContentLoaded', () => {
   // Bottom pagination button event listeners
   prevPageBtnBottom.addEventListener('click', goToPrevPage);
   nextPageBtnBottom.addEventListener('click', goToNextPage);
+  
+  // Date filter event listeners
+  toggleDateFilterBtn.addEventListener('click', () => {
+    const isVisible = dateFilterControls.style.display === 'flex';
+    dateFilterControls.style.display = isVisible ? 'none' : 'flex';
+    toggleDateFilterBtn.classList.toggle('date-filter-active', !isVisible);
+  });
+  
+  applyDateFilterBtn.addEventListener('click', () => {
+    // Convert from date input format (YYYY-MM-DD) to ArXiv API format (YYYYMMDD)
+    const fromDate = dateFromInput.value ? dateFromInput.value.replace(/-/g, '') : '';
+    const toDate = dateToInput.value ? dateToInput.value.replace(/-/g, '') : '';
+    
+    dateFromFilter = fromDate;
+    dateToFilter = toDate;
+    
+    // Highlight the toggle button if filter is active
+    const isFilterActive = fromDate || toDate;
+    toggleDateFilterBtn.classList.toggle('date-filter-active', isFilterActive);
+    
+    // Reset to page 1 and load papers with new filter
+    currentPage = 1;
+    loadPapers();
+  });
+  
+  clearDateFilterBtn.addEventListener('click', () => {
+    // Clear date inputs and filters
+    dateFromInput.value = '';
+    dateToInput.value = '';
+    dateFromFilter = '';
+    dateToFilter = '';
+    
+    // Remove highlight
+    toggleDateFilterBtn.classList.remove('date-filter-active');
+    
+    // Reset to page 1 and load papers without filter
+    currentPage = 1;
+    loadPapers();
+  });
   
   closeModal.addEventListener('click', () => modal.style.display = 'none');
   closeSelectionModal.addEventListener('click', () => selectionModal.style.display = 'none');
@@ -399,6 +450,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return text.substring(0, maxLength) + '...';
   }
   
+  // Format date from YYYYMMDD to YYYY-MM-DD for display
+  function formatDateYYYYMMDD(dateStr) {
+    if (!dateStr || dateStr.length !== 8) return dateStr;
+    return `${dateStr.substring(0, 4)}-${dateStr.substring(4, 6)}-${dateStr.substring(6, 8)}`;
+  }
+  
   function goToPrevPage() {
     if (channelInfo.hasPrevPage) {
       currentPage--;
@@ -448,12 +505,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const category = categorySelect.value;
       const pageSize = parseInt(resultsPerPageSelect.value);
       
-      // Build the API URL with search parameters if needed
+      // Build the API URL with search parameters and filters
       let apiUrl = `/api/papers?category=${encodeURIComponent(category)}&page=${currentPage}&pageSize=${pageSize}`;
       
       // Add search term if present
       if (currentSearchTerm) {
         apiUrl += `&search=${encodeURIComponent(currentSearchTerm)}`;
+      }
+      
+      // Add date filters if present
+      if (dateFromFilter) {
+        apiUrl += `&dateFrom=${dateFromFilter}`;
+      }
+      
+      if (dateToFilter) {
+        apiUrl += `&dateTo=${dateToFilter}`;
       }
       
       // Fetch papers from API
@@ -536,6 +602,34 @@ document.addEventListener('DOMContentLoaded', () => {
       messageText += ` matching "${currentSearchTerm}"`;
     }
     
+    // Add date filter info if filtered
+    if (channelInfo.dateFrom || channelInfo.dateTo) {
+      let dateInfo = ' from ';
+      
+      if (channelInfo.dateFrom) {
+        const fromDate = formatDateYYYYMMDD(channelInfo.dateFrom);
+        dateInfo += fromDate;
+      } else {
+        dateInfo += 'the beginning';
+      }
+      
+      dateInfo += ' to ';
+      
+      if (channelInfo.dateTo) {
+        const toDate = formatDateYYYYMMDD(channelInfo.dateTo);
+        dateInfo += toDate;
+      } else {
+        dateInfo += 'present';
+      }
+      
+      messageText += dateInfo;
+    }
+    
+    // Add API limit warning if applicable
+    if (channelInfo.apiLimited) {
+      messageText += ` (ArXiv API limits results, actual count may be higher)`;
+    }
+    
     resultsMessage.textContent = messageText;
     papersContainer.appendChild(resultsMessage);
   }
@@ -561,6 +655,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add search term info if searched
     if (currentSearchTerm && currentSearchTerm.length > 0) {
       messageText += ` matching "${currentSearchTerm}"`;
+    }
+    
+    // Add date filter info if filtered
+    if (channelInfo.dateFrom || channelInfo.dateTo) {
+      let dateInfo = ' from ';
+      
+      if (channelInfo.dateFrom) {
+        const fromDate = formatDateYYYYMMDD(channelInfo.dateFrom);
+        dateInfo += fromDate;
+      } else {
+        dateInfo += 'the beginning';
+      }
+      
+      dateInfo += ' to ';
+      
+      if (channelInfo.dateTo) {
+        const toDate = formatDateYYYYMMDD(channelInfo.dateTo);
+        dateInfo += toDate;
+      } else {
+        dateInfo += 'present';
+      }
+      
+      messageText += dateInfo;
+    }
+    
+    // Add API limit warning if applicable
+    if (channelInfo.apiLimited) {
+      messageText += ` (ArXiv API limits results, actual count may be higher)`;
     }
     
     resultsRow.innerHTML = `
