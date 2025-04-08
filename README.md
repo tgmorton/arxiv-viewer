@@ -15,6 +15,9 @@ This application was designed and coded by [Claude](https://claude.ai/), Anthrop
 - Resizable columns for customized viewing
 - Responsive design for desktop and mobile devices
 
+![CleanShot 2025-04-07 at 19 05 26@2x](https://github.com/user-attachments/assets/4e77f43d-a8d7-405c-97fa-58f1cab77bc4)
+
+
 ## Installation
 
 ```bash

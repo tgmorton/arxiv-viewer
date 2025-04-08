@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ArXiv Viewer Launcher</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .launcher {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            margin-top: 0;
+            color: #121212;
+        }
+        p {
+            color: #505050;
+            line-height: 1.5;
+        }
+        button {
+            background-color: #1A478E;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0D2B5E;
+        }
+        .status {
+            margin-top: 20px;
+            font-style: italic;
+            color: #777;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="launcher">
+        <h1>ArXiv Viewer</h1>
+        <p>Launch the ArXiv Viewer application to browse and search academic papers from ArXiv.org</p>
+        <button id="launchBtn">Launch ArXiv Viewer</button>
+        <div id="status" class="status">Starting application, please wait...</div>
+    </div>
+
+    <script>
+        document.getElementById('launchBtn').addEventListener('click', function() {
+            // Display status message
+            document.getElementById('status').style.display = 'block';
+            
+            // Launch the application using the shell script
+            const script = 'open -a Terminal.app "' + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/')) + '/start-arxiv-viewer.sh"';
+            
+            // Execute the script using iframe trick (macOS only)
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            iframe.src = 'file:///' + script;
+            
+            // Update status message after a short delay
+            setTimeout(function() {
+                document.getElementById('status').innerHTML = "ArXiv Viewer is starting. Check your browser and terminal.";
+            }, 2000);
+        });
+    </script>
+</body>
+</html>
