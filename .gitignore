@@ -25,6 +25,12 @@ yarn.lock
 # Claude-specific files
 CLAUDE.md
 
+# Local application launchers
+*.command
+*.app
+*-Launcher.html
+start-arxiv-viewer.sh
+
 # Logs
 logs
 *.log
