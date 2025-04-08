@@ -3,9 +3,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const categorySelect = document.getElementById('category-select');
   const resultsPerPageSelect = document.getElementById('results-per-page');
   const refreshBtn = document.getElementById('refresh-btn');
+  const searchInput = document.getElementById('search-input');
+  const searchBtn = document.getElementById('search-btn');
   const prevPageBtn = document.getElementById('prev-page-btn');
   const nextPageBtn = document.getElementById('next-page-btn');
   const paginationInfo = document.getElementById('pagination-info');
+  // Bottom pagination elements
+  const prevPageBtnBottom = document.getElementById('prev-page-btn-bottom');
+  const nextPageBtnBottom = document.getElementById('next-page-btn-bottom');
+  const paginationInfoBottom = document.getElementById('pagination-info-bottom');
   const papersContainer = document.getElementById('papers-container');
   const papersTable = document.getElementById('papers-table');
   const papersTableHead = papersTable.querySelector('thead');
@@ -30,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedPapers = {}; // Track selected papers
   let channelInfo = {}; // Store info about the current feed
   let currentPage = 1; // Current page number
+  let currentSearchTerm = ''; // Current search term
   
   // Load papers on page load
   loadPapers();
@@ -50,9 +57,35 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPapers();
   });
   
-  refreshBtn.addEventListener('click', loadPapers);
+  refreshBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    currentSearchTerm = '';
+    loadPapers();
+  });
+  
+  // Search functionality
+  searchBtn.addEventListener('click', performSearch);
+  searchInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      performSearch();
+    }
+  });
+  
+  function performSearch() {
+    const searchTerm = searchInput.value.trim();
+    if (searchTerm !== currentSearchTerm) {
+      currentSearchTerm = searchTerm;
+      currentPage = 1;
+      loadPapers();
+    }
+  }
+  
   prevPageBtn.addEventListener('click', goToPrevPage);
   nextPageBtn.addEventListener('click', goToNextPage);
+  
+  // Bottom pagination button event listeners
+  prevPageBtnBottom.addEventListener('click', goToPrevPage);
+  nextPageBtnBottom.addEventListener('click', goToNextPage);
   
   closeModal.addEventListener('click', () => modal.style.display = 'none');
   closeSelectionModal.addEventListener('click', () => selectionModal.style.display = 'none');
@@ -312,12 +345,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function updatePaginationUI() {
-    // Update pagination display
-    paginationInfo.textContent = `Page ${channelInfo.page} of ${channelInfo.totalPages || 1}`;
+    // Update pagination display for both top and bottom
+    const paginationText = `Page ${channelInfo.page} of ${channelInfo.totalPages || 1}`;
+    paginationInfo.textContent = paginationText;
+    paginationInfoBottom.textContent = paginationText;
     
-    // Enable/disable pagination buttons
-    prevPageBtn.disabled = !channelInfo.hasPrevPage;
-    nextPageBtn.disabled = !channelInfo.hasNextPage;
+    // Enable/disable pagination buttons (both top and bottom)
+    const hasPrev = channelInfo.hasPrevPage;
+    const hasNext = channelInfo.hasNextPage;
+    
+    prevPageBtn.disabled = !hasPrev;
+    nextPageBtn.disabled = !hasNext;
+    
+    prevPageBtnBottom.disabled = !hasPrev;
+    nextPageBtnBottom.disabled = !hasNext;
   }
   
   async function loadPapers() {
@@ -336,8 +377,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const category = categorySelect.value;
       const pageSize = parseInt(resultsPerPageSelect.value);
       
+      // Build the API URL with search parameters if needed
+      let apiUrl = `/api/papers?category=${encodeURIComponent(category)}&page=${currentPage}&pageSize=${pageSize}`;
+      
+      // Add search term if present
+      if (currentSearchTerm) {
+        apiUrl += `&search=${encodeURIComponent(currentSearchTerm)}`;
+      }
+      
       // Fetch papers from API
-      const apiUrl = `/api/papers?category=${encodeURIComponent(category)}&page=${currentPage}&pageSize=${pageSize}`;
       const response = await fetch(apiUrl);
       
       if (!response.ok) throw new Error('Failed to fetch papers');
@@ -410,7 +458,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add results count message
     const resultsMessage = document.createElement('div');
     resultsMessage.className = 'end-of-feed';
-    resultsMessage.textContent = `Showing ${papers.length} of ${channelInfo.totalResults} papers from ${channelInfo.title}`;
+    let messageText = `Showing ${papers.length} of ${channelInfo.totalResults} papers from ${channelInfo.title}`;
+    
+    // Add search term info if searched
+    if (currentSearchTerm) {
+      messageText += ` matching "${currentSearchTerm}"`;
+    }
+    
+    resultsMessage.textContent = messageText;
     papersContainer.appendChild(resultsMessage);
   }
   
@@ -426,9 +481,17 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Add results count message
     const resultsRow = document.createElement('tr');
+    
+    let messageText = `Showing ${papers.length} of ${channelInfo.totalResults} papers from ArXiv ${channelInfo.description || ''}`;
+    
+    // Add search term info if searched
+    if (currentSearchTerm) {
+      messageText += ` matching "${currentSearchTerm}"`;
+    }
+    
     resultsRow.innerHTML = `
       <td colspan="7">
-        <div class="end-of-feed">Showing ${papers.length} of ${channelInfo.totalResults} papers from ArXiv ${channelInfo.description || ''}</div>
+        <div class="end-of-feed">${messageText}</div>
       </td>
     `;
     papersTableBody.appendChild(resultsRow);
@@ -546,6 +609,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listeners
     const moreBtn = abstractRow.querySelector('.more-less-btn');
     moreBtn.addEventListener('click', (e) => toggleAbstract(e, paper.id));
+    
+    // Make the entire abstract row clickable to toggle
+    abstractRow.addEventListener('click', (e) => {
+      // Don't trigger if clicking specifically on the more/less button
+      if (!e.target.closest('.more-less-btn')) {
+        toggleAbstract(e, paper.id);
+      }
+    });
     
     const checkbox = mainRow.querySelector('.paper-select');
     checkbox.addEventListener('change', (e) => togglePaperSelection(e, paper.id));

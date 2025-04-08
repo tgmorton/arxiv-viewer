@@ -34,6 +34,10 @@
       </div>
       
       <div class="control-group">
+        <div class="search-container">
+          <input type="text" id="search-input" placeholder="Search papers..." aria-label="Search papers">
+          <button id="search-btn">Search</button>
+        </div>
         <button id="refresh-btn">Refresh</button>
         <button id="show-selection-btn" style="display: none;">Selected Papers <span id="selection-count"></span></button>
       </div>
@@ -78,6 +82,12 @@
         </tr>
       </tbody>
     </table>
+    
+    <div class="pagination-controls bottom-pagination">
+      <button id="prev-page-btn-bottom" disabled>← Previous</button>
+      <span id="pagination-info-bottom">Page 1 of 1</span>
+      <button id="next-page-btn-bottom" disabled>Next →</button>
+    </div>
   </main>
 
   <div id="paper-modal" class="modal">

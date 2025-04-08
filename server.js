@@ -68,7 +68,7 @@ app.get('/api/papers-rss', async (req, res) => {
   }
 });
 
-// New endpoint using the ArXiv API with pagination
+// New endpoint using the ArXiv API with pagination and search
 app.get('/api/papers', async (req, res) => {
   try {
     // Get query parameters
@@ -77,13 +77,24 @@ app.get('/api/papers', async (req, res) => {
     const pageSize = parseInt(req.query.pageSize) || 100;
     const sortBy = req.query.sortBy || 'submittedDate';
     const sortOrder = req.query.sortOrder || 'descending';
+    const searchTerm = req.query.search || '';
     
     // Calculate start index for pagination
     const start = (page - 1) * pageSize;
     
     // Construct the ArXiv API query
     const apiUrl = 'http://export.arxiv.org/api/query';
-    const query = `search_query=cat:${category}&start=${start}&max_results=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+    
+    // Build search query based on presence of search term
+    let searchQuery;
+    if (searchTerm) {
+      // Search in title and abstract
+      searchQuery = `search_query=AND+cat:${category}+AND+%28ti:"${encodeURIComponent(searchTerm)}"+OR+abs:"${encodeURIComponent(searchTerm)}"%29`;
+    } else {
+      searchQuery = `search_query=cat:${category}`;
+    }
+    
+    const query = `${searchQuery}&start=${start}&max_results=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
     
     const response = await axios.get(`${apiUrl}?${query}`);
     
