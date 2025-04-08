@@ -305,6 +305,10 @@ main {
 .papers-table td {
   padding: var(--space-xs) var(--space-sm);
   vertical-align: top;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .paper-row {
@@ -380,6 +384,14 @@ main {
   margin-bottom: var(--space-xs);
 }
 
+.paper-title-container {
+  width: 100%;
+  display: block;
+  box-sizing: border-box;
+  padding-right: var(--space-xs);
+  overflow: hidden; /* Contains the contents */
+}
+
 .papers-table .paper-title {
   margin-bottom: var(--space-xs);
   font-weight: 700;
@@ -390,7 +402,20 @@ main {
   max-height: none;
   height: auto;
   line-height: 1.3;
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  min-width: 0; /* Ensures the text can shrink below its natural width */
+  white-space: normal; /* Ensures text will wrap */
+  text-align: left; /* Ensures left alignment */
+}
+
+.paper-author-container {
+  width: 100%;
   display: block;
+  box-sizing: border-box;
+  padding-right: var(--space-xs);
+  overflow: hidden;
 }
 
 .papers-table .paper-author {
@@ -398,6 +423,11 @@ main {
   color: var(--color-text-secondary);
   margin-bottom: var(--space-xs);
   font-style: italic;
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .papers-table .paper-summary {

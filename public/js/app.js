@@ -208,6 +208,14 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       });
+      
+      // Force redraw of content within cells to ensure proper sizing
+      requestAnimationFrame(() => {
+        const titleContainers = papersTable.querySelectorAll('.paper-title-container, .paper-author-container');
+        titleContainers.forEach(container => {
+          container.style.maxWidth = '100%';
+        });
+      });
     }
     
     function handleMouseUp() {
@@ -644,8 +652,16 @@ document.addEventListener('DOMContentLoaded', () => {
         <input type="checkbox" class="paper-select" ${isSelected ? 'checked' : ''}>
       </td>
       <td class="paper-id">${paper.id}</td>
-      <td class="paper-title">${paper.title}</td>
-      <td class="paper-author">${paper.creator || 'Unknown authors'}</td>
+      <td>
+        <div class="paper-title-container">
+          <span class="paper-title">${paper.title}</span>
+        </div>
+      </td>
+      <td>
+        <div class="paper-author-container">
+          <span class="paper-author">${paper.creator || 'Unknown authors'}</span>
+        </div>
+      </td>
       <td class="date-cell">${formattedDate}</td>
       <td class="link-cell">
         <a href="${pdfLink}" class="paper-link-small" target="_blank" title="Download PDF">PDF</a>
