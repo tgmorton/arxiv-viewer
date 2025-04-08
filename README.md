@@ -1,35 +1,34 @@
 # ArXiv Viewer
 
-A simple web application for browsing ArXiv research papers. This application allows users to view papers from various ArXiv categories and provides a clean, readable interface inspired by financial publications like the Wall Street Journal.
+A streamlined application for browsing ArXiv research papers with an information-dense interface inspired by financial publications. Built to simplify the discovery and reading of academic papers across different research categories.
+
+This application was designed and coded by [Claude](https://claude.ai/), Anthropic's AI assistant.
 
 ## Features
 
-- Browse papers from different ArXiv categories
-- View paper details including title, authors, and abstract
-- Open papers directly on ArXiv website
-- Responsive design that works on desktop and mobile devices
-
-## Design Philosophy
-
-The ArXiv Browser application follows design principles inspired by financial publications, prioritizing:
-
-- **Information Density**: Maximize the amount of useful content visible at once
-- **Readability**: Ensure text remains legible despite compact presentation
-- **Hierarchy**: Establish clear visual importance through typography and spacing
-- **Functionality**: Prioritize utility over aesthetics while maintaining visual quality
-- **Economy**: Use space, color, and ornamentation sparingly and purposefully
+- Browse papers from multiple ArXiv categories with pagination
+- View papers in table or grid layout
+- Search papers by title and abstract content
+- Select and copy paper links to clipboard
+- Expandable abstracts for quick scanning
+- Direct links to PDF files and ArXiv pages
+- Resizable columns for customized viewing
+- Responsive design for desktop and mobile devices
 
 ## Installation
 
 ```bash
-# Clone the repository (if using git)
-git clone https://github.com/yourusername/arxiv-viewer.git
+# Clone the repository
+git clone https://github.com/tgmorton/arxiv-viewer.git
 cd arxiv-viewer
 
 # Install dependencies
 npm install
 
-# Start the development server
+# Start the application
+npm start
+
+# For development with auto-reload
 npm run dev
 ```
 
@@ -37,16 +36,19 @@ npm run dev
 
 1. Open your browser and navigate to `http://localhost:3000`
 2. Select a category from the dropdown menu
-3. Click on a paper to view more details
-4. Click the "View on ArXiv" button to open the paper on the ArXiv website
+3. Use the search box to find specific papers
+4. Click on a paper row to select it, or use the checkboxes
+5. Expand abstracts using the [more] button or by clicking the abstract
+6. Access PDFs directly using the PDF link
+7. Adjust column widths by dragging the column edges
 
-## Technologies Used
+## Technologies
 
-- Node.js and Express for the backend
-- Vanilla JavaScript for the frontend
-- CSS for styling
-- ArXiv RSS feeds for data
+- **Backend**: Node.js, Express
+- **Frontend**: Vanilla JavaScript (no frameworks)
+- **API**: ArXiv API for paper data
+- **Styling**: Custom CSS with responsive design
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License.

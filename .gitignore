@@ -22,6 +22,9 @@ yarn.lock
 *.sln
 *.sw?
 
+# Claude-specific files
+CLAUDE.md
+
 # Logs
 logs
 *.log
