@@ -261,13 +261,15 @@ main {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  border-collapse: separate;
+  border-collapse: collapse;
   border-spacing: 0;
   font-size: var(--font-size-base);
   line-height: 1.2;
   display: table;
   table-layout: fixed;
   overflow-wrap: break-word;
+  /* Ensure the table uses the fixed layout algorithm for predictable column widths */
+  table-layout: fixed;
 }
 
 /* Column resizing styles */
@@ -331,30 +333,31 @@ main {
 }
 
 .papers-table .checkbox-cell {
-  width: 24px;
+  width: 3%;
   text-align: center;
 }
 
 .papers-table .paper-id {
-  width: 118px;
+  width: 12%;
 }
 
+/* 3:2:1 ratio for Title:Authors:Date */
 .papers-table .paper-title {
-  width: 414px;
+  width: 35%;
 }
 
 .papers-table .paper-author {
-  width: 209px;
+  width: 23%;
 }
 
 .papers-table .date-cell {
-  width: 113px;
+  width: 11.5%;
   white-space: nowrap;
   color: var(--color-text-secondary);
 }
 
 .papers-table .link-cell {
-  width: 61px;
+  width: 7.5%;
   text-align: center;
 }
 

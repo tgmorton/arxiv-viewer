@@ -101,10 +101,39 @@ document.addEventListener('DOMContentLoaded', () => {
   copySelectionBtn.addEventListener('click', copySelectionToClipboard);
   clearSelectionBtn.addEventListener('click', clearSelection);
   
-  // Initialize column resizing after table is loaded
+  // Global column widths array for consistent sizing
+  const colWidths = ['3%', '12%', '35%', '23%', '11.5%', '7.5%', '7.5%']; // Pre-defined width ratios
+
+  // Function to apply column widths to the entire table
+  function applyColumnWidthsToTable() {
+    // Apply to headers
+    const headers = papersTableHead.querySelectorAll('th');
+    headers.forEach((header, index) => {
+      if (index < colWidths.length) {
+        header.style.width = colWidths[index];
+      }
+    });
+    
+    // Apply to all rows
+    const tableRows = papersTable.querySelectorAll('tr');
+    tableRows.forEach(row => {
+      const cells = row.querySelectorAll('td, th');
+      cells.forEach((cell, cellIndex) => {
+        if (cellIndex < colWidths.length) {
+          cell.style.width = colWidths[cellIndex];
+        }
+      });
+    });
+  }
+  
+  // Initialize and handle column resizing
   function initColumnResizing() {
     const headers = papersTableHead.querySelectorAll('th');
     
+    // Apply initial column widths
+    applyColumnWidthsToTable();
+    
+    // Set up resize handlers
     headers.forEach((header, index) => {
       if (index < headers.length - 1) { // Skip last header
         const resizer = header;
@@ -118,12 +147,12 @@ document.addEventListener('DOMContentLoaded', () => {
             isResizing = true;
             currentResizer = header;
             startX = e.pageX;
-            startWidth = parseInt(window.getComputedStyle(header).width, 10);
+            startWidth = header.getBoundingClientRect().width;
             
             // Get the next header for adjustment
             const nextHeader = headers[index + 1];
             if (nextHeader) {
-              nextStartWidth = parseInt(window.getComputedStyle(nextHeader).width, 10);
+              nextStartWidth = nextHeader.getBoundingClientRect().width;
             }
             
             document.addEventListener('mousemove', handleMouseMove);
@@ -144,21 +173,38 @@ document.addEventListener('DOMContentLoaded', () => {
       
       const diffX = e.pageX - startX;
       
-      // Limit minimum width to 30px
-      const newWidth = Math.max(30, startWidth + diffX);
-      const newNextWidth = Math.max(30, nextStartWidth - diffX);
+      // Get table width to calculate percentages
+      const tableWidth = papersTable.getBoundingClientRect().width;
       
-      currentResizer.style.width = `${newWidth}px`;
-      nextHeader.style.width = `${newNextWidth}px`;
+      // Calculate new widths ensuring minimum size
+      const minWidth = Math.max(30, tableWidth * 0.03); // Minimum 3% or 30px
+      const newWidthPx = Math.max(minWidth, startWidth + diffX);
+      const newNextWidthPx = Math.max(minWidth, nextStartWidth - diffX);
       
-      // Update all cells in this column
+      // Convert to percentages
+      const newWidthPercent = (newWidthPx / tableWidth) * 100;
+      const newNextWidthPercent = (newNextWidthPx / tableWidth) * 100;
+      
+      // Apply new widths
+      const newWidthStr = `${newWidthPercent}%`;
+      const newNextWidthStr = `${newNextWidthPercent}%`;
+      
+      // Update column widths in our tracking array
+      colWidths[index] = newWidthStr;
+      colWidths[index + 1] = newNextWidthStr;
+      
+      // Apply to header
+      currentResizer.style.width = newWidthStr;
+      nextHeader.style.width = newNextWidthStr;
+      
+      // Update all cells in these columns
       const tableRows = papersTable.querySelectorAll('tr');
       tableRows.forEach(row => {
         const cells = row.querySelectorAll('td, th');
         if (cells.length > index) {
-          cells[index].style.width = `${newWidth}px`;
+          cells[index].style.width = newWidthStr;
           if (cells.length > index + 1) {
-            cells[index + 1].style.width = `${newNextWidth}px`;
+            cells[index + 1].style.width = newNextWidthStr;
           }
         }
       });
@@ -185,6 +231,13 @@ document.addEventListener('DOMContentLoaded', () => {
     setView('table');
   });
   
+  // Apply column widths on window resize for responsive tables
+  window.addEventListener('resize', () => {
+    if (currentView === 'table') {
+      applyColumnWidthsToTable();
+    }
+  });
+  
   // Functions
   function setView(view) {
     currentView = view;
@@ -203,6 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPapersGrid(paperData);
       } else {
         renderPapersTable(paperData);
+        // Apply column widths immediately when switching to table view
+        setTimeout(applyColumnWidthsToTable, 10);
       }
     }
   }
@@ -486,6 +541,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const rowsFragment = createPaperRow(paper);
       papersTableBody.appendChild(rowsFragment);
     });
+    
+    // Apply column widths to new rows
+    applyColumnWidthsToTable();
     
     // Add results count message
     const resultsRow = document.createElement('tr');
