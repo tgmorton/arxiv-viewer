@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ArXiv Browser</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>ArXiv Browser</h1>
+    <div class="controls">
+      <select id="category-select">
+        <option value="https://rss.arxiv.org/rss/cs.ai">Computer Science - Artificial Intelligence</option>
+        <option value="https://rss.arxiv.org/rss/cs.cl">Computer Science - Computation and Language</option>
+        <option value="https://rss.arxiv.org/rss/cs.cv">Computer Science - Computer Vision</option>
+        <option value="https://rss.arxiv.org/rss/cs.lg">Computer Science - Machine Learning</option>
+        <option value="https://rss.arxiv.org/rss/cs.se">Computer Science - Software Engineering</option>
+        <option value="https://rss.arxiv.org/rss/stat.ml">Statistics - Machine Learning</option>
+      </select>
+      <button id="refresh-btn">Refresh</button>
+    </div>
+  </header>
+  
+  <main>
+    <div id="papers-container" class="papers-grid">
+      <!-- Papers will be loaded here -->
+      <div class="loading">Loading papers...</div>
+    </div>
+  </main>
+
+  <div id="paper-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
