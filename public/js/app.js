@@ -167,15 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (count === 0) return;
     
-    // Format the selection as text
-    const text = Object.values(selectedPapers).map(paper => {
-      return `ID: ${paper.id}\nTitle: ${paper.title}\nAuthors: ${paper.creator || 'Unknown'}\nLink: ${paper.link}\n`;
-    }).join('\n');
+    // Format the selection as text - only URLs
+    const text = Object.values(selectedPapers).map(paper => paper.link).join('\n');
     
     // Copy to clipboard
     navigator.clipboard.writeText(text)
       .then(() => {
-        alert('Selected papers copied to clipboard');
+        alert('Paper URLs copied to clipboard');
       })
       .catch(err => {
         console.error('Failed to copy text: ', err);
@@ -209,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Show loading
       papersTableBody.innerHTML = `
         <tr>
-          <td colspan="5">
+          <td colspan="6">
             <div class="loading">Loading papers...</div>
           </td>
         </tr>
@@ -238,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (papers.length === 0) {
         papersTableBody.innerHTML = `
           <tr>
-            <td colspan="5">
+            <td colspan="6">
               <div class="loading">No papers found</div>
             </td>
           </tr>
@@ -260,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error loading papers:', error);
       papersTableBody.innerHTML = `
         <tr>
-          <td colspan="5">
+          <td colspan="6">
             <div class="loading">Error: ${error.message}</div>
           </td>
         </tr>
@@ -294,15 +292,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Create and append table rows
     papers.forEach(paper => {
-      const row = createPaperRow(paper);
-      papersTableBody.appendChild(row);
+      const rowsFragment = createPaperRow(paper);
+      papersTableBody.appendChild(rowsFragment);
     });
     
     // Add end of feed message if applicable
     if (channelInfo.isComplete) {
       const endRow = document.createElement('tr');
       endRow.innerHTML = `
-        <td colspan="5">
+        <td colspan="6">
           <div class="end-of-feed">End of results • ${papers.length} papers from ${channelInfo.title}</div>
         </td>
       `;
@@ -360,8 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   function createPaperRow(paper) {
-    const row = document.createElement('tr');
-    row.classList.add(paper.id % 2 === 0 ? 'even' : 'odd');
+    // Create main row for paper details
+    const mainRow = document.createElement('tr');
+    mainRow.classList.add(paper.id % 2 === 0 ? 'even' : 'odd', 'paper-row');
     
     // Format date
     const date = new Date(paper.date);
@@ -376,49 +375,64 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Determine if expanded
     const isExpanded = expandedPapers[paper.id];
-    const displayDescription = isExpanded ? cleanDescription : truncateText(cleanDescription);
+    const displayDescription = isExpanded ? cleanDescription : truncateText(cleanDescription, 300);
     
     // Determine if selected
     const isSelected = selectedPapers[paper.id];
     
-    // Create row content
-    row.innerHTML = `
+    // Create main row content (title and metadata)
+    mainRow.innerHTML = `
       <td class="checkbox-cell">
         <input type="checkbox" class="paper-select" ${isSelected ? 'checked' : ''}>
       </td>
       <td class="paper-id">${paper.id}</td>
-      <td>
-        <div class="paper-title">${paper.title}</div>
-        <div class="paper-author">${paper.creator || 'Unknown authors'}</div>
-        <div class="paper-summary">
-          ${displayDescription}
-          <button class="more-less-btn">${isExpanded ? '[less]' : '[more]'}</button>
-        </div>
-      </td>
+      <td class="paper-title">${paper.title}</td>
+      <td class="paper-author">${paper.creator || 'Unknown authors'}</td>
       <td class="date-cell">${formattedDate}</td>
       <td class="link-cell">
         <a href="${paper.link}" class="paper-link-small" target="_blank">view</a>
       </td>
     `;
     
+    // Create abstract row
+    const abstractRow = document.createElement('tr');
+    abstractRow.classList.add(paper.id % 2 === 0 ? 'even' : 'odd');
+    abstractRow.innerHTML = `
+      <td colspan="6" class="paper-summary">
+        ${displayDescription}
+        <button class="more-less-btn">${isExpanded ? '[less]' : '[more]'}</button>
+      </td>
+    `;
+    
+    // Create a document fragment to hold both rows
+    const fragment = document.createDocumentFragment();
+    fragment.appendChild(mainRow);
+    fragment.appendChild(abstractRow);
+    
     // Add event listeners
-    const moreBtn = row.querySelector('.more-less-btn');
+    const moreBtn = abstractRow.querySelector('.more-less-btn');
     moreBtn.addEventListener('click', (e) => toggleAbstract(e, paper.id));
     
-    const checkbox = row.querySelector('.paper-select');
+    const checkbox = mainRow.querySelector('.paper-select');
     checkbox.addEventListener('change', (e) => togglePaperSelection(e, paper.id));
     
-    // Add click event to open modal (delegated to the row)
-    row.addEventListener('click', (e) => {
+    // Add click event to open modal (delegated to the rows)
+    mainRow.addEventListener('click', (e) => {
       // Only open modal if not clicking on checkbox, link or more/less button
       if (!e.target.closest('.paper-select') && 
-          !e.target.closest('.more-less-btn') &&
           !e.target.closest('.paper-link-small')) {
         openPaperModal(paper);
       }
     });
     
-    return row;
+    abstractRow.addEventListener('click', (e) => {
+      // Only open modal if not clicking on more/less button
+      if (!e.target.closest('.more-less-btn')) {
+        openPaperModal(paper);
+      }
+    });
+    
+    return fragment;
   }
   
   function openPaperModal(paper) {

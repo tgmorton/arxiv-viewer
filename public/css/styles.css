@@ -190,6 +190,8 @@ main {
 /* Papers table view */
 .papers-table {
   width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
   border-collapse: collapse;
   font-size: var(--font-size-base);
   line-height: 1.2;
@@ -209,8 +211,11 @@ main {
 
 .papers-table td {
   padding: var(--space-xs) var(--space-sm);
-  border-bottom: 1px solid #E0E0E0;
   vertical-align: top;
+}
+
+.paper-row {
+  border-bottom: 1px solid #E0E0E0;
 }
 
 .papers-table tr:nth-child(even) {
@@ -226,24 +231,31 @@ main {
   font-family: var(--font-family-mono);
   font-size: var(--font-size-small);
   position: static;
-  width: 90px;
+  width: 70px;
   color: var(--color-text-secondary);
 }
 
 .papers-table .checkbox-cell {
-  width: 30px;
+  width: 24px;
   text-align: center;
 }
 
 .papers-table .date-cell {
-  width: 90px;
+  width: 70px;
   white-space: nowrap;
   color: var(--color-text-secondary);
 }
 
 .papers-table .link-cell {
-  width: 50px;
+  width: 40px;
   text-align: center;
+}
+
+.papers-table .paper-summary {
+  grid-column: 1 / -1;
+  padding-left: var(--space-lg);
+  border-bottom: 1px solid #E0E0E0;
+  padding-bottom: var(--space-xs);
 }
 
 .papers-table .paper-title {
