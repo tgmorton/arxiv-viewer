@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectionModal.style.display = 'none';
   }
   
-  function truncateText(text, maxLength = 150) {
+  function truncateText(text, maxLength = 500) {
     if (!text) return 'No summary available';
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Determine if expanded
     const isExpanded = expandedPapers[paper.id];
-    const displayDescription = isExpanded ? cleanDescription : truncateText(cleanDescription, 300);
+    const displayDescription = isExpanded ? cleanDescription : truncateText(cleanDescription);
     
     // Determine if selected
     const isSelected = selectedPapers[paper.id];
@@ -444,11 +444,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Create abstract row
     const abstractRow = document.createElement('tr');
-    abstractRow.classList.add(paper.id % 2 === 0 ? 'even' : 'odd');
+    abstractRow.classList.add('abstract-row');
     abstractRow.innerHTML = `
-      <td colspan="6" class="paper-summary">
-        ${displayDescription}
-        <button class="more-less-btn">${isExpanded ? '[less]' : '[more]'}</button>
+      <td colspan="6">
+        <div class="paper-summary">
+          ${displayDescription}
+          <button class="more-less-btn">${isExpanded ? '[less]' : '[more]'}</button>
+        </div>
       </td>
     `;
     
