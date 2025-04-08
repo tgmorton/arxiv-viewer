@@ -89,7 +89,8 @@ app.get('/api/papers', async (req, res) => {
     let searchQuery;
     if (searchTerm) {
       // Search in title and abstract
-      searchQuery = `search_query=AND+cat:${category}+AND+%28ti:"${encodeURIComponent(searchTerm)}"+OR+abs:"${encodeURIComponent(searchTerm)}"%29`;
+      // Properly format the ArXiv API query syntax
+      searchQuery = `search_query=cat:${category}+AND+(ti:${encodeURIComponent(searchTerm)}+OR+abs:${encodeURIComponent(searchTerm)})`;
     } else {
       searchQuery = `search_query=cat:${category}`;
     }

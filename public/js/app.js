@@ -65,9 +65,17 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Search functionality
   searchBtn.addEventListener('click', performSearch);
-  searchInput.addEventListener('keypress', (e) => {
+  searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent form submission
       performSearch();
+    } else if (e.key === 'Escape') {
+      // Clear search on Escape key
+      searchInput.value = '';
+      if (currentSearchTerm) {
+        currentSearchTerm = '';
+        loadPapers();
+      }
     }
   });
   
@@ -461,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let messageText = `Showing ${papers.length} of ${channelInfo.totalResults} papers from ${channelInfo.title}`;
     
     // Add search term info if searched
-    if (currentSearchTerm) {
+    if (currentSearchTerm && currentSearchTerm.length > 0) {
       messageText += ` matching "${currentSearchTerm}"`;
     }
     
@@ -485,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let messageText = `Showing ${papers.length} of ${channelInfo.totalResults} papers from ArXiv ${channelInfo.description || ''}`;
     
     // Add search term info if searched
-    if (currentSearchTerm) {
+    if (currentSearchTerm && currentSearchTerm.length > 0) {
       messageText += ` matching "${currentSearchTerm}"`;
     }
     
