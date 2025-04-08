@@ -47,7 +47,18 @@ app.get('/api/papers', async (req, res) => {
         };
       }) : [];
       
-      res.json(papers);
+      // Add channel info to include feed title and description
+      const channelInfo = {
+        title: result.rss.channel.title || 'ArXiv Papers',
+        description: result.rss.channel.description || '',
+        totalResults: papers.length,
+        isComplete: true // RSS feeds typically provide all results at once
+      };
+      
+      res.json({
+        papers: papers,
+        channelInfo: channelInfo
+      });
     });
   } catch (error) {
     console.error('Error fetching feed:', error);

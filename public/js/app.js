@@ -10,12 +10,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const modal = document.getElementById('paper-modal');
   const modalContent = document.getElementById('modal-content');
   const closeModal = document.querySelector('.close-modal');
+  const selectionModal = document.getElementById('selection-modal');
+  const selectionContent = document.getElementById('selection-content');
+  const closeSelectionModal = document.querySelector('.close-selection-modal');
+  const showSelectionBtn = document.getElementById('show-selection-btn');
+  const selectionCount = document.getElementById('selection-count');
+  const copySelectionBtn = document.getElementById('copy-selection-btn');
+  const clearSelectionBtn = document.getElementById('clear-selection-btn');
   
   // State
   let currentView = 'table'; // 'grid' or 'table'
   let paperData = []; // Store papers data
   let expandedPapers = {}; // Track expanded abstracts
   let selectedPapers = {}; // Track selected papers
+  let channelInfo = {}; // Store info about the current feed
   
   // Load papers on page load
   loadPapers();
@@ -24,8 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
   categorySelect.addEventListener('change', loadPapers);
   refreshBtn.addEventListener('click', loadPapers);
   closeModal.addEventListener('click', () => modal.style.display = 'none');
+  closeSelectionModal.addEventListener('click', () => selectionModal.style.display = 'none');
+  showSelectionBtn.addEventListener('click', showSelectionModal);
+  copySelectionBtn.addEventListener('click', copySelectionToClipboard);
+  clearSelectionBtn.addEventListener('click', clearSelection);
+  
   window.addEventListener('click', (e) => {
     if (e.target === modal) modal.style.display = 'none';
+    if (e.target === selectionModal) selectionModal.style.display = 'none';
   });
   
   // View toggle listeners
@@ -73,7 +87,20 @@ document.addEventListener('DOMContentLoaded', () => {
   
   function togglePaperSelection(event, paperId) {
     event.stopPropagation(); // Prevent opening the modal
-    selectedPapers[paperId] = !selectedPapers[paperId];
+    
+    // Find the paper in our data
+    const paper = paperData.find(p => p.id === paperId);
+    if (!paper) return;
+    
+    // Toggle selection state
+    if (selectedPapers[paperId]) {
+      delete selectedPapers[paperId];
+    } else {
+      selectedPapers[paperId] = paper;
+    }
+    
+    // Update selection count and button visibility
+    updateSelectionUI();
     
     // Re-render based on current view
     if (currentView === 'grid') {
@@ -81,6 +108,94 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       renderPapersTable(paperData);
     }
+  }
+  
+  function updateSelectionUI() {
+    const count = Object.keys(selectedPapers).length;
+    
+    // Update selection count
+    selectionCount.textContent = count > 0 ? `(${count})` : '';
+    
+    // Show/hide selection button
+    showSelectionBtn.style.display = count > 0 ? 'block' : 'none';
+  }
+  
+  function showSelectionModal() {
+    const count = Object.keys(selectedPapers).length;
+    
+    if (count === 0) {
+      selectionContent.innerHTML = '<div class="no-selection-message">No papers selected</div>';
+    } else {
+      // Create table for selected papers
+      let html = `
+        <table class="selection-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Authors</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+      
+      // Add row for each selected paper
+      Object.values(selectedPapers).forEach((paper, index) => {
+        html += `
+          <tr class="${index % 2 === 0 ? 'even' : 'odd'}">
+            <td class="paper-id">${paper.id}</td>
+            <td>${paper.title}</td>
+            <td>${paper.creator || 'Unknown authors'}</td>
+            <td class="link-cell">
+              <a href="${paper.link}" class="paper-link-small" target="_blank">view</a>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table>';
+      selectionContent.innerHTML = html;
+    }
+    
+    // Show the modal
+    selectionModal.style.display = 'block';
+  }
+  
+  function copySelectionToClipboard() {
+    const count = Object.keys(selectedPapers).length;
+    
+    if (count === 0) return;
+    
+    // Format the selection as text
+    const text = Object.values(selectedPapers).map(paper => {
+      return `ID: ${paper.id}\nTitle: ${paper.title}\nAuthors: ${paper.creator || 'Unknown'}\nLink: ${paper.link}\n`;
+    }).join('\n');
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        alert('Selected papers copied to clipboard');
+      })
+      .catch(err => {
+        console.error('Failed to copy text: ', err);
+        alert('Failed to copy to clipboard');
+      });
+  }
+  
+  function clearSelection() {
+    selectedPapers = {};
+    updateSelectionUI();
+    
+    // Re-render the current view
+    if (currentView === 'grid') {
+      renderPapersGrid(paperData);
+    } else {
+      renderPapersTable(paperData);
+    }
+    
+    // Close the modal
+    selectionModal.style.display = 'none';
   }
   
   function truncateText(text, maxLength = 150) {
@@ -108,7 +223,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`/api/papers?feed=${encodeURIComponent(feedUrl)}`);
       if (!response.ok) throw new Error('Failed to fetch papers');
       
-      const papers = await response.json();
+      const data = await response.json();
+      
+      // Store the channel info
+      channelInfo = data.channelInfo || {
+        title: 'ArXiv Papers',
+        isComplete: true,
+        totalResults: 0
+      };
+      
+      // Get papers array
+      const papers = data.papers || [];
       
       if (papers.length === 0) {
         papersTableBody.innerHTML = `
@@ -153,6 +278,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = createPaperCard(paper);
       papersContainer.appendChild(card);
     });
+    
+    // Add end of feed message if applicable
+    if (channelInfo.isComplete) {
+      const endMessage = document.createElement('div');
+      endMessage.className = 'end-of-feed';
+      endMessage.textContent = `End of results • ${papers.length} papers from ${channelInfo.title}`;
+      papersContainer.appendChild(endMessage);
+    }
   }
   
   function renderPapersTable(papers) {
@@ -164,6 +297,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const row = createPaperRow(paper);
       papersTableBody.appendChild(row);
     });
+    
+    // Add end of feed message if applicable
+    if (channelInfo.isComplete) {
+      const endRow = document.createElement('tr');
+      endRow.innerHTML = `
+        <td colspan="5">
+          <div class="end-of-feed">End of results • ${papers.length} papers from ${channelInfo.title}</div>
+        </td>
+      `;
+      papersTableBody.appendChild(endRow);
+    }
   }
   
   function createPaperCard(paper) {

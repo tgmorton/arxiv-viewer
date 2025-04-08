@@ -19,6 +19,7 @@
         <option value="https://rss.arxiv.org/rss/stat.ml">Statistics - Machine Learning</option>
       </select>
       <button id="refresh-btn">Refresh</button>
+      <button id="show-selection-btn" style="display: none;">Selected Papers <span id="selection-count"></span></button>
     </div>
   </header>
   
@@ -58,6 +59,20 @@
     <div class="modal-content">
       <span class="close-modal">&times;</span>
       <div id="modal-content"></div>
+    </div>
+  </div>
+  
+  <div id="selection-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-selection-modal">&times;</span>
+      <div class="selection-header">
+        <h3>Selected Papers</h3>
+        <div class="selection-controls">
+          <button id="copy-selection-btn">Copy to Clipboard</button>
+          <button id="clear-selection-btn">Clear Selection</button>
+        </div>
+      </div>
+      <div id="selection-content"></div>
     </div>
   </div>
 
