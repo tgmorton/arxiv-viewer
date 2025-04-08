@@ -325,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Show loading
       papersTableBody.innerHTML = `
         <tr>
-          <td colspan="6">
+          <td colspan="7">
             <div class="loading">Loading papers...</div>
           </td>
         </tr>
@@ -364,7 +364,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (papers.length === 0) {
         papersTableBody.innerHTML = `
           <tr>
-            <td colspan="6">
+            <td colspan="7">
               <div class="loading">No papers found</div>
             </td>
           </tr>
@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error('Error loading papers:', error);
       papersTableBody.innerHTML = `
         <tr>
-          <td colspan="6">
+          <td colspan="7">
             <div class="loading">Error: ${error.message}</div>
           </td>
         </tr>
@@ -427,8 +427,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add results count message
     const resultsRow = document.createElement('tr');
     resultsRow.innerHTML = `
-      <td colspan="6">
-        <div class="end-of-feed">Showing ${papers.length} of ${channelInfo.totalResults} papers from ${channelInfo.title}</div>
+      <td colspan="7">
+        <div class="end-of-feed">Showing ${papers.length} of ${channelInfo.totalResults} papers from ArXiv ${channelInfo.description || ''}</div>
       </td>
     `;
     papersTableBody.appendChild(resultsRow);
@@ -506,6 +506,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Determine if selected
     const isSelected = selectedPapers[paper.id];
     
+    // Get PDF link if available
+    const pdfLink = paper.pdfLink || paper.link.replace('/abs/', '/pdf/') + '.pdf';
+    
     // Create main row content (title and metadata)
     mainRow.innerHTML = `
       <td class="checkbox-cell">
@@ -516,7 +519,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <td class="paper-author">${paper.creator || 'Unknown authors'}</td>
       <td class="date-cell">${formattedDate}</td>
       <td class="link-cell">
-        <a href="${paper.link}" class="paper-link-small" target="_blank">view</a>
+        <a href="${pdfLink}" class="paper-link-small" target="_blank" title="Download PDF">PDF</a>
+      </td>
+      <td class="link-cell">
+        <a href="${paper.link}" class="paper-link-small" target="_blank" title="View on ArXiv">view</a>
       </td>
     `;
     
@@ -524,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const abstractRow = document.createElement('tr');
     abstractRow.classList.add('abstract-row');
     abstractRow.innerHTML = `
-      <td colspan="6">
+      <td colspan="7">
         <div class="paper-summary">
           ${displayDescription}
           <button class="more-less-btn">${isExpanded ? '[less]' : '[more]'}</button>
@@ -544,19 +550,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkbox = mainRow.querySelector('.paper-select');
     checkbox.addEventListener('change', (e) => togglePaperSelection(e, paper.id));
     
-    // Add click event to open modal (delegated to the rows)
+    // Add click event to toggle selection (delegated to the main row)
     mainRow.addEventListener('click', (e) => {
-      // Only open modal if not clicking on checkbox, link or more/less button
+      // Only toggle selection if not clicking on checkbox or links
       if (!e.target.closest('.paper-select') && 
-          !e.target.closest('.paper-link-small')) {
-        openPaperModal(paper);
-      }
-    });
-    
-    abstractRow.addEventListener('click', (e) => {
-      // Only open modal if not clicking on more/less button
-      if (!e.target.closest('.more-less-btn')) {
-        openPaperModal(paper);
+          !e.target.closest('a')) {
+        togglePaperSelection(e, paper.id);
       }
     });
     
