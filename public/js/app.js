@@ -1,7 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
   // Elements
   const categorySelect = document.getElementById('category-select');
+  const resultsPerPageSelect = document.getElementById('results-per-page');
   const refreshBtn = document.getElementById('refresh-btn');
+  const prevPageBtn = document.getElementById('prev-page-btn');
+  const nextPageBtn = document.getElementById('next-page-btn');
+  const paginationInfo = document.getElementById('pagination-info');
   const papersContainer = document.getElementById('papers-container');
   const papersTable = document.getElementById('papers-table');
   const papersTableBody = papersTable.querySelector('tbody');
@@ -24,13 +28,26 @@ document.addEventListener('DOMContentLoaded', () => {
   let expandedPapers = {}; // Track expanded abstracts
   let selectedPapers = {}; // Track selected papers
   let channelInfo = {}; // Store info about the current feed
+  let currentPage = 1; // Current page number
   
   // Load papers on page load
   loadPapers();
   
   // Event listeners
-  categorySelect.addEventListener('change', loadPapers);
+  categorySelect.addEventListener('change', () => {
+    currentPage = 1;
+    loadPapers();
+  });
+  
+  resultsPerPageSelect.addEventListener('change', () => {
+    currentPage = 1;
+    loadPapers();
+  });
+  
   refreshBtn.addEventListener('click', loadPapers);
+  prevPageBtn.addEventListener('click', goToPrevPage);
+  nextPageBtn.addEventListener('click', goToNextPage);
+  
   closeModal.addEventListener('click', () => modal.style.display = 'none');
   closeSelectionModal.addEventListener('click', () => selectionModal.style.display = 'none');
   showSelectionBtn.addEventListener('click', showSelectionModal);
@@ -202,6 +219,31 @@ document.addEventListener('DOMContentLoaded', () => {
     return text.substring(0, maxLength) + '...';
   }
   
+  function goToPrevPage() {
+    if (channelInfo.hasPrevPage) {
+      currentPage--;
+      loadPapers();
+      window.scrollTo(0, 0);
+    }
+  }
+  
+  function goToNextPage() {
+    if (channelInfo.hasNextPage) {
+      currentPage++;
+      loadPapers();
+      window.scrollTo(0, 0);
+    }
+  }
+  
+  function updatePaginationUI() {
+    // Update pagination display
+    paginationInfo.textContent = `Page ${channelInfo.page} of ${channelInfo.totalPages || 1}`;
+    
+    // Enable/disable pagination buttons
+    prevPageBtn.disabled = !channelInfo.hasPrevPage;
+    nextPageBtn.disabled = !channelInfo.hasNextPage;
+  }
+  
   async function loadPapers() {
     try {
       // Show loading
@@ -214,11 +256,14 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       papersContainer.innerHTML = '<div class="loading">Loading papers...</div>';
       
-      // Get selected feed URL
-      const feedUrl = categorySelect.value;
+      // Get parameters
+      const category = categorySelect.value;
+      const pageSize = parseInt(resultsPerPageSelect.value);
       
       // Fetch papers from API
-      const response = await fetch(`/api/papers?feed=${encodeURIComponent(feedUrl)}`);
+      const apiUrl = `/api/papers?category=${encodeURIComponent(category)}&page=${currentPage}&pageSize=${pageSize}`;
+      const response = await fetch(apiUrl);
+      
       if (!response.ok) throw new Error('Failed to fetch papers');
       
       const data = await response.json();
@@ -227,8 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
       channelInfo = data.channelInfo || {
         title: 'ArXiv Papers',
         isComplete: true,
-        totalResults: 0
+        totalResults: 0,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false
       };
+      
+      // Update pagination
+      updatePaginationUI();
       
       // Get papers array
       const papers = data.papers || [];
@@ -277,13 +329,11 @@ document.addEventListener('DOMContentLoaded', () => {
       papersContainer.appendChild(card);
     });
     
-    // Add end of feed message if applicable
-    if (channelInfo.isComplete) {
-      const endMessage = document.createElement('div');
-      endMessage.className = 'end-of-feed';
-      endMessage.textContent = `End of results • ${papers.length} papers from ${channelInfo.title}`;
-      papersContainer.appendChild(endMessage);
-    }
+    // Add results count message
+    const resultsMessage = document.createElement('div');
+    resultsMessage.className = 'end-of-feed';
+    resultsMessage.textContent = `Showing ${papers.length} of ${channelInfo.totalResults} papers from ${channelInfo.title}`;
+    papersContainer.appendChild(resultsMessage);
   }
   
   function renderPapersTable(papers) {
@@ -296,16 +346,14 @@ document.addEventListener('DOMContentLoaded', () => {
       papersTableBody.appendChild(rowsFragment);
     });
     
-    // Add end of feed message if applicable
-    if (channelInfo.isComplete) {
-      const endRow = document.createElement('tr');
-      endRow.innerHTML = `
-        <td colspan="6">
-          <div class="end-of-feed">End of results • ${papers.length} papers from ${channelInfo.title}</div>
-        </td>
-      `;
-      papersTableBody.appendChild(endRow);
-    }
+    // Add results count message
+    const resultsRow = document.createElement('tr');
+    resultsRow.innerHTML = `
+      <td colspan="6">
+        <div class="end-of-feed">Showing ${papers.length} of ${channelInfo.totalResults} papers from ${channelInfo.title}</div>
+      </td>
+    `;
+    papersTableBody.appendChild(resultsRow);
   }
   
   function createPaperCard(paper) {

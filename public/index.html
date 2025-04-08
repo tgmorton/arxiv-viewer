@@ -10,16 +10,39 @@
   <header>
     <h1>ArXiv Browser</h1>
     <div class="controls">
-      <select id="category-select">
-        <option value="https://rss.arxiv.org/rss/cs.ai">Computer Science - Artificial Intelligence</option>
-        <option value="https://rss.arxiv.org/rss/cs.cl">Computer Science - Computation and Language</option>
-        <option value="https://rss.arxiv.org/rss/cs.cv">Computer Science - Computer Vision</option>
-        <option value="https://rss.arxiv.org/rss/cs.lg">Computer Science - Machine Learning</option>
-        <option value="https://rss.arxiv.org/rss/cs.se">Computer Science - Software Engineering</option>
-        <option value="https://rss.arxiv.org/rss/stat.ml">Statistics - Machine Learning</option>
-      </select>
-      <button id="refresh-btn">Refresh</button>
-      <button id="show-selection-btn" style="display: none;">Selected Papers <span id="selection-count"></span></button>
+      <div class="control-group">
+        <label for="category-select">Category:</label>
+        <select id="category-select">
+          <option value="cs.AI">Computer Science - Artificial Intelligence</option>
+          <option value="cs.CL">Computer Science - Computation and Language</option>
+          <option value="cs.CV">Computer Science - Computer Vision</option>
+          <option value="cs.LG">Computer Science - Machine Learning</option>
+          <option value="cs.SE">Computer Science - Software Engineering</option>
+          <option value="stat.ML">Statistics - Machine Learning</option>
+          <option value="physics.comp-ph">Physics - Computational Physics</option>
+          <option value="q-bio">Quantitative Biology</option>
+          <option value="econ">Economics</option>
+        </select>
+        
+        <label for="results-per-page">Results:</label>
+        <select id="results-per-page">
+          <option value="50">50</option>
+          <option value="100" selected>100</option>
+          <option value="300">300</option>
+          <option value="500">500</option>
+        </select>
+      </div>
+      
+      <div class="control-group">
+        <button id="refresh-btn">Refresh</button>
+        <button id="show-selection-btn" style="display: none;">Selected Papers <span id="selection-count"></span></button>
+      </div>
+    </div>
+    
+    <div class="pagination-controls">
+      <button id="prev-page-btn" disabled>← Previous</button>
+      <span id="pagination-info">Page 1 of 1</span>
+      <button id="next-page-btn" disabled>Next →</button>
     </div>
   </header>
   
